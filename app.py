@@ -63,6 +63,12 @@ async def startup_event():
         print("Gemma model initialized successfully")
     except Exception as e:
         print(f"Error initializing Gemma model: {e}")
+        print("Available checkpoints:")
+        try:
+            for checkpoint in gm.ckpts.CheckpointPath:
+                print(f"  - {checkpoint}")
+        except:
+            print("  Could not list available checkpoints")
         print("The API will return mock responses")
 
 @app.get("/")

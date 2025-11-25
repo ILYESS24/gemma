@@ -85,24 +85,19 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
-      {/* Shader Animation Background */}
-      <ShaderAnimation
-        variant="gradient"
-        speed="slow"
-        intensity="subtle"
-        className="fixed inset-0 z-0"
-      />
+    <div className="relative min-h-screen text-white overflow-hidden">
+      {/* Three.js Shader Animation Background */}
+      <ShaderAnimation />
 
-      {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex flex-col">
+      {/* Main Content Overlay */}
+      <div className="absolute inset-0 z-10 flex flex-col min-h-screen">
         {/* Header */}
-        <div className="flex-shrink-0 p-6 border-b border-white/10">
+        <div className="flex-shrink-0 p-6 border-b border-white/20 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-2xl font-light text-center bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text text-transparent">
+            <h1 className="text-3xl font-light text-center bg-gradient-to-r from-white via-cyan-200 to-white bg-clip-text text-transparent drop-shadow-lg">
               Gemma AI
             </h1>
-            <p className="text-sm text-center text-gray-400 mt-2">
+            <p className="text-sm text-center text-cyan-200/80 mt-2 font-medium">
               Intelligence artificielle conversationnelle
             </p>
           </div>
@@ -110,15 +105,15 @@ export default function Home() {
 
         {/* Chat Container */}
         <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-6 py-8">
-          <div className="flex-1 bg-black/20 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-6 min-h-[500px] max-h-[calc(100vh-300px)] overflow-y-auto">
+          <div className="flex-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-2xl p-6 mb-6 min-h-[500px] max-h-[calc(100vh-300px)] overflow-y-auto shadow-2xl">
             {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full">
+                  <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <span className="text-2xl">🤖</span>
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-2xl border border-white/20">
+                    <span className="text-3xl">🤖</span>
                   </div>
-                  <p className="text-gray-400 text-lg">Commencez une conversation avec Gemma</p>
-                  <p className="text-gray-500 text-sm mt-2">Posez une question ou dites bonjour !</p>
+                  <p className="text-cyan-200 text-xl font-medium">Commencez une conversation avec Gemma</p>
+                  <p className="text-gray-300 text-sm mt-3">Posez une question ou dites bonjour !</p>
                 </div>
               </div>
             ) : (
@@ -131,10 +126,10 @@ export default function Home() {
                     }`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-lg ${
-                        message.role === "user"
-                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
-                          : "bg-white/10 backdrop-blur-sm border border-white/20 text-gray-100"
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-2xl backdrop-blur-md ${
+                      message.role === "user"
+                        ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white border border-cyan-400/30"
+                        : "bg-black/50 border border-white/30 text-gray-100"
                       }`}
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -184,7 +179,7 @@ export default function Home() {
             <PromptBox
               onSendMessage={sendMessage}
               disabled={isLoading}
-              className="max-w-none bg-white/5 border-white/20 hover:bg-white/10 transition-colors"
+              className="max-w-none bg-black/40 backdrop-blur-md border-white/30 hover:bg-black/60 transition-all shadow-2xl"
               placeholder="Posez votre question à Gemma..."
             />
           </div>

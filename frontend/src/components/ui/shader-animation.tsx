@@ -1,176 +1,143 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import { useEffect, useRef } from "react"
+import * as THREE from "three"
 
-interface ShaderAnimationProps extends React.HTMLAttributes<HTMLDivElement> {
-  children?: React.ReactNode;
-  variant?: "gradient" | "noise" | "wave" | "matrix";
-  speed?: "slow" | "normal" | "fast";
-  intensity?: "subtle" | "medium" | "strong";
+export function ShaderAnimation() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const sceneRef = useRef<{
+    camera: THREE.Camera
+    scene: THREE.Scene
+    renderer: THREE.WebGLRenderer
+    uniforms: any
+    animationId: number
+  } | null>(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    const container = containerRef.current
+
+    // Vertex shader
+    const vertexShader = `
+      void main() {
+        gl_Position = vec4( position, 1.0 );
+      }
+    `
+
+    // Fragment shader
+    const fragmentShader = `
+      #define TWO_PI 6.2831853072
+      #define PI 3.14159265359
+
+      precision highp float;
+      uniform vec2 resolution;
+      uniform float time;
+
+      void main(void) {
+        vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
+        float t = time*0.05;
+        float lineWidth = 0.002;
+
+        vec3 color = vec3(0.0);
+        for(int j = 0; j < 3; j++){
+          for(int i=0; i < 5; i++){
+            color[j] += lineWidth*float(i*i) / abs(fract(t - 0.01*float(j)+float(i)*0.01)*5.0 - length(uv) + mod(uv.x+uv.y, 0.2));
+          }
+        }
+
+        gl_FragColor = vec4(color[0],color[1],color[2],1.0);
+      }
+    `
+
+    // Initialize Three.js scene
+    const camera = new THREE.Camera()
+    camera.position.z = 1
+
+    const scene = new THREE.Scene()
+    const geometry = new THREE.PlaneGeometry(2, 2)
+
+    const uniforms = {
+      time: { type: "f", value: 1.0 },
+      resolution: { type: "v2", value: new THREE.Vector2() },
+    }
+
+    const material = new THREE.ShaderMaterial({
+      uniforms: uniforms,
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+    })
+
+    const mesh = new THREE.Mesh(geometry, material)
+    scene.add(mesh)
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer.setPixelRatio(window.devicePixelRatio)
+
+    container.appendChild(renderer.domElement)
+
+    // Handle window resize
+    const onWindowResize = () => {
+      const width = container.clientWidth
+      const height = container.clientHeight
+      renderer.setSize(width, height)
+      uniforms.resolution.value.x = renderer.domElement.width
+      uniforms.resolution.value.y = renderer.domElement.height
+    }
+
+    // Initial resize
+    onWindowResize()
+    window.addEventListener("resize", onWindowResize, false)
+
+    // Animation loop
+    const animate = () => {
+      const animationId = requestAnimationFrame(animate)
+      uniforms.time.value += 0.05
+      renderer.render(scene, camera)
+
+      if (sceneRef.current) {
+        sceneRef.current.animationId = animationId
+      }
+    }
+
+    // Store scene references for cleanup
+    sceneRef.current = {
+      camera,
+      scene,
+      renderer,
+      uniforms,
+      animationId: 0,
+    }
+
+    // Start animation
+    animate()
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener("resize", onWindowResize)
+
+      if (sceneRef.current) {
+        cancelAnimationFrame(sceneRef.current.animationId)
+
+        if (container && sceneRef.current.renderer.domElement) {
+          container.removeChild(sceneRef.current.renderer.domElement)
+        }
+
+        sceneRef.current.renderer.dispose()
+        geometry.dispose()
+        material.dispose()
+      }
+    }
+  }, [])
+
+  return (
+    <div
+      ref={containerRef}
+      className="w-full h-screen"
+      style={{
+        background: "#000",
+        overflow: "hidden",
+      }}
+    />
+  )
 }
-
-export const ShaderAnimation = React.forwardRef<HTMLDivElement, ShaderAnimationProps>(
-  ({ className, children, variant = "gradient", speed = "normal", intensity = "medium", ...props }, ref) => {
-    const speedClasses = {
-      slow: "duration-10000",
-      normal: "duration-5000",
-      fast: "duration-2000",
-    };
-
-    const intensityClasses = {
-      subtle: "opacity-20",
-      medium: "opacity-40",
-      strong: "opacity-60",
-    };
-
-    const baseClasses = "absolute inset-0 pointer-events-none overflow-hidden";
-
-    if (variant === "gradient") {
-      return (
-        <div ref={ref} className={cn("relative", className)} {...props}>
-          <div
-            className={cn(
-              baseClasses,
-              speedClasses[speed],
-              intensityClasses[intensity],
-              "bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500",
-              "animate-gradient-shift"
-            )}
-            style={{
-              backgroundSize: "400% 400%",
-              animation: `gradientShift ${speed === "slow" ? "10s" : speed === "fast" ? "2s" : "5s"} ease-in-out infinite`,
-            }}
-          />
-          {children}
-          <style jsx>{`
-            @keyframes gradientShift {
-              0%, 100% {
-                background-position: 0% 50%;
-              }
-              50% {
-                background-position: 100% 50%;
-              }
-            }
-          `}</style>
-        </div>
-      );
-    }
-
-    if (variant === "wave") {
-      return (
-        <div ref={ref} className={cn("relative", className)} {...props}>
-          <div
-            className={cn(
-              baseClasses,
-              speedClasses[speed],
-              intensityClasses[intensity],
-              "bg-gradient-to-r from-transparent via-white to-transparent",
-              "animate-wave"
-            )}
-            style={{
-              animation: `wave ${speed === "slow" ? "8s" : speed === "fast" ? "1.5s" : "3s"} ease-in-out infinite`,
-            }}
-          />
-          {children}
-          <style jsx>{`
-            @keyframes wave {
-              0% {
-                transform: translateX(-100%);
-              }
-              100% {
-                transform: translateX(100%);
-              }
-            }
-          `}</style>
-        </div>
-      );
-    }
-
-    if (variant === "noise") {
-      return (
-        <div ref={ref} className={cn("relative", className)} {...props}>
-          <div
-            className={cn(
-              baseClasses,
-              speedClasses[speed],
-              intensityClasses[intensity],
-              "bg-noise animate-noise"
-            )}
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-              animation: `noise ${speed === "slow" ? "12s" : speed === "fast" ? "1s" : "4s"} linear infinite`,
-            }}
-          />
-          {children}
-          <style jsx>{`
-            @keyframes noise {
-              0%, 100% {
-                background-position: 0 0;
-              }
-              50% {
-                background-position: 100px 100px;
-              }
-            }
-          `}</style>
-        </div>
-      );
-    }
-
-    if (variant === "matrix") {
-      return (
-        <div ref={ref} className={cn("relative", className)} {...props}>
-          <div
-            className={cn(
-              baseClasses,
-              speedClasses[speed],
-              intensityClasses[intensity],
-              "font-mono text-green-400 animate-matrix"
-            )}
-            style={{
-              background: "transparent",
-              overflow: "hidden",
-            }}
-          >
-            {Array.from({ length: 20 }).map((_, i) => (
-              <div
-                key={i}
-                className="absolute text-xs opacity-20"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${2 + Math.random() * 3}s`,
-                }}
-              >
-                {Array.from({ length: 20 }).map((_, j) => (
-                  <div key={j} style={{ animationDelay: `${j * 0.1}s` }}>
-                    {String.fromCharCode(33 + Math.floor(Math.random() * 94))}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-          {children}
-          <style jsx>{`
-            @keyframes matrix {
-              0% {
-                transform: translateY(100vh);
-              }
-              100% {
-                transform: translateY(-100vh);
-              }
-            }
-          `}</style>
-        </div>
-      );
-    }
-
-    return (
-      <div ref={ref} className={cn("relative", className)} {...props}>
-        {children}
-      </div>
-    );
-  }
-);
-
-ShaderAnimation.displayName = "ShaderAnimation";

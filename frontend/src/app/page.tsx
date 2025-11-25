@@ -90,30 +90,29 @@ export default function Home() {
       <ShaderAnimation />
 
       {/* Main Content Overlay */}
-      <div className="absolute inset-0 z-10 flex flex-col min-h-screen">
+      <div className="absolute inset-0 z-10 flex flex-col">
         {/* Header */}
-        <div className="flex-shrink-0 p-6 border-b border-white/20 backdrop-blur-sm">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-light text-center bg-gradient-to-r from-white via-cyan-200 to-white bg-clip-text text-transparent drop-shadow-lg">
+        <div className="flex-shrink-0 p-4 border-b border-white/20 backdrop-blur-sm">
+          <div className="max-w-2xl mx-auto">
+            <h1 className="text-2xl font-light text-center bg-gradient-to-r from-white via-cyan-200 to-white bg-clip-text text-transparent">
               Gemma AI
             </h1>
-            <p className="text-sm text-center text-cyan-200/80 mt-2 font-medium">
-              Intelligence artificielle conversationnelle
+            <p className="text-xs text-center text-cyan-200/80 mt-1">
+              IA conversationnelle
             </p>
           </div>
         </div>
 
         {/* Chat Container */}
-        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-6 py-8">
-          <div className="flex-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-2xl p-6 mb-6 min-h-[500px] max-h-[calc(100vh-300px)] overflow-y-auto shadow-2xl">
+        <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 py-4 max-h-[calc(100vh-200px)]">
+          <div className="flex-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-xl p-4 mb-4 min-h-[300px] max-h-[400px] overflow-y-auto shadow-2xl">
             {messages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
+              <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-2xl border border-white/20">
-                    <span className="text-3xl">🤖</span>
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg border border-white/20">
+                    <span className="text-lg">🤖</span>
                   </div>
-                  <p className="text-cyan-200 text-xl font-medium">Commencez une conversation avec Gemma</p>
-                  <p className="text-gray-300 text-sm mt-3">Posez une question ou dites bonjour !</p>
+                  <p className="text-cyan-200 text-sm">Prêt à discuter</p>
                 </div>
               </div>
             ) : (
@@ -126,17 +125,17 @@ export default function Home() {
                     }`}
                   >
                     <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-2xl backdrop-blur-md ${
+                    className={`max-w-[80%] rounded-lg px-3 py-2 shadow-lg backdrop-blur-sm ${
                       message.role === "user"
-                        ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white border border-cyan-400/30"
-                        : "bg-black/50 border border-white/30 text-gray-100"
+                        ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white border border-cyan-400/20"
+                        : "bg-black/40 border border-white/20 text-gray-100"
                       }`}
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
                         {message.content}
                       </p>
                       <p
-                        className={`text-xs mt-2 ${
+                        className={`text-xs mt-1 opacity-70 ${
                           message.role === "user"
                             ? "text-blue-100"
                             : "text-gray-400"
@@ -154,14 +153,14 @@ export default function Home() {
                 {/* Loading indicator */}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3 shadow-lg mr-12">
+                    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 shadow-lg mr-8">
                       <div className="flex items-center gap-2">
                         <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                          <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce"></div>
+                          <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                          <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
                         </div>
-                        <span className="text-sm text-gray-300">
+                        <span className="text-xs text-gray-300">
                           Gemma réfléchit...
                         </span>
                       </div>
@@ -175,11 +174,11 @@ export default function Home() {
           </div>
 
           {/* Input */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 px-4 pb-4">
             <PromptBox
               onSendMessage={sendMessage}
               disabled={isLoading}
-              className="max-w-none bg-black/40 backdrop-blur-md border-white/30 hover:bg-black/60 transition-all shadow-2xl"
+              className="max-w-none bg-black/50 backdrop-blur-md border-white/30 hover:bg-black/70 transition-all shadow-xl"
               placeholder="Posez votre question à Gemma..."
             />
           </div>

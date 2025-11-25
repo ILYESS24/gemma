@@ -57,35 +57,146 @@
             margin-right: 20%;
         }
 
-        .input-container {
+        /* PromptBox Component Styles - Inspired by shadcn/ui */
+        .prompt-box {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            border-radius: 28px;
+            padding: 2px;
+            background: white;
+            border: 1px solid transparent;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: all 0.2s ease;
         }
 
-        input[type="text"] {
-            flex: 1;
-            padding: 15px;
+        .prompt-box:focus-within {
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .prompt-textarea {
+            width: 100%;
+            resize: none;
             border: none;
-            border-radius: 25px;
-            font-size: 16px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
             outline: none;
-        }
-
-        button {
-            padding: 15px 25px;
-            border: none;
-            border-radius: 25px;
-            background: #FF6B6B;
-            color: white;
+            background: transparent;
+            padding: 12px 16px;
             font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s ease;
+            font-family: inherit;
+            line-height: 24px;
+            color: #374151;
+            min-height: 24px;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
-        button:hover {
-            background: #FF5252;
+        .prompt-textarea::placeholder {
+            color: #9CA3AF;
+        }
+
+        .prompt-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px 8px 16px;
+            border-top: 1px solid #F3F4F6;
+        }
+
+        .prompt-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #6B7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tool-button:hover {
+            background: #F3F4F6;
+            color: #374151;
+        }
+
+        .tool-button:active {
+            background: #E5E7EB;
+        }
+
+        .send-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: #000000;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background: #374151;
+        }
+
+        .send-button:disabled {
+            background: #D1D5DB;
+            cursor: not-allowed;
+        }
+
+        /* Popover for tools */
+        .tools-popover {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            margin-bottom: 8px;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            min-width: 200px;
+            display: none;
+            z-index: 50;
+        }
+
+        .tools-popover.show {
+            display: block;
+        }
+
+        .tool-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .tool-item:hover {
+            background: #F9FAFB;
+        }
+
+        .tool-item.active {
+            background: #EBF4FF;
+            color: #2563EB;
+        }
+
+        .tool-icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.7;
         }
 
         .status {
@@ -141,17 +252,189 @@
             </div>
         </div>
 
-        <div class="input-container">
-            <input type="text" id="message-input" placeholder="Tapez votre message ici..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()">Envoyer</button>
+        <!-- PromptBox Component - Inspired by shadcn/ui -->
+        <div class="prompt-box">
+            <textarea
+                id="message-input"
+                class="prompt-textarea"
+                placeholder="Message Gemma..."
+                rows="1"
+                onkeydown="handleKeyDown(event)"
+            ></textarea>
+
+            <div class="prompt-footer">
+                <div class="prompt-tools">
+                    <!-- Plus Button (Attach) -->
+                    <button type="button" class="tool-button" onclick="handleAttach()" title="Joindre un fichier">
+                        <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                    </button>
+
+                    <!-- Tools Button -->
+                    <div class="tools-container" style="position: relative;">
+                        <button type="button" class="tool-button" onclick="toggleTools()" id="tools-button" title="Outils">
+                            <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                        </button>
+
+                        <div class="tools-popover" id="tools-popover">
+                            <div class="tool-item" onclick="selectTool('search')">
+                                <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                                </svg>
+                                <span>Rechercher</span>
+                            </div>
+                            <div class="tool-item" onclick="selectTool('image')">
+                                <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                                </svg>
+                                <span>Créer une image</span>
+                            </div>
+                            <div class="tool-item" onclick="selectTool('code')">
+                                <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/>
+                                </svg>
+                                <span>Écrire du code</span>
+                            </div>
+                            <div class="tool-item" onclick="selectTool('think')">
+                                <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M1 12h6M17 12h6M4.93 19.07l4.24-4.24M14.83 9.17l4.24-4.24"/>
+                                </svg>
+                                <span>Penser plus</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Tool Display -->
+                    <div id="active-tool" style="display: none; align-items: center; gap: 4px; background: #EBF4FF; color: #2563EB; padding: 4px 8px; border-radius: 6px; font-size: 12px;">
+                        <span id="active-tool-icon"></span>
+                        <span id="active-tool-name"></span>
+                        <button onclick="clearTool()" style="margin-left: 4px; background: none; border: none; color: #2563EB; cursor: pointer; padding: 0;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Voice Button -->
+                    <button type="button" class="tool-button" onclick="handleVoice()" title="Enregistrement vocal">
+                        <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Send Button -->
+                <button
+                    type="button"
+                    class="send-button"
+                    onclick="sendMessage()"
+                    id="send-button"
+                    disabled
+                    title="Envoyer le message"
+                >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5.25L12 18.75"/>
+                        <path d="M18.75 12L12 5.25L5.25 12"/>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
         const chatContainer = document.getElementById('chat-container');
         const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
         const statusDiv = document.getElementById('status');
         const mockNotice = document.getElementById('mock-notice');
+        const activeToolDiv = document.getElementById('active-tool');
+        const activeToolIcon = document.getElementById('active-tool-icon');
+        const activeToolName = document.getElementById('active-tool-name');
+
+        let selectedTool = null;
+        let isToolsOpen = false;
+
+        // Auto-resize textarea
+        function autoResizeTextarea() {
+            messageInput.style.height = 'auto';
+            const newHeight = Math.min(messageInput.scrollHeight, 200);
+            messageInput.style.height = `${newHeight}px`;
+        }
+
+        messageInput.addEventListener('input', function() {
+            autoResizeTextarea();
+            updateSendButton();
+        });
+
+        // Update send button state
+        function updateSendButton() {
+            const hasContent = messageInput.value.trim().length > 0;
+            sendButton.disabled = !hasContent;
+        }
+
+        // Tool management
+        function toggleTools() {
+            const popover = document.getElementById('tools-popover');
+            isToolsOpen = !isToolsOpen;
+            popover.classList.toggle('show', isToolsOpen);
+        }
+
+        function selectTool(toolId) {
+            const tools = {
+                'search': { name: 'Rechercher', icon: '🔍' },
+                'image': { name: 'Image', icon: '🎨' },
+                'code': { name: 'Code', icon: '💻' },
+                'think': { name: 'Penser', icon: '🧠' }
+            };
+
+            selectedTool = toolId;
+            activeToolIcon.textContent = tools[toolId].icon;
+            activeToolName.textContent = tools[toolId].name;
+            activeToolDiv.style.display = 'flex';
+
+            toggleTools();
+
+            // Add visual feedback to selected tool item
+            document.querySelectorAll('.tool-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.tool-item').classList.add('active');
+        }
+
+        function clearTool() {
+            selectedTool = null;
+            activeToolDiv.style.display = 'none';
+
+            // Remove active state from all tool items
+            document.querySelectorAll('.tool-item').forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+
+        // Handle file attachment (placeholder)
+        function handleAttach() {
+            alert('Fonctionnalité de pièce jointe à implémenter');
+        }
+
+        // Handle voice recording (placeholder)
+        function handleVoice() {
+            alert('Fonctionnalité d\'enregistrement vocal à implémenter');
+        }
+
+        // Close popover when clicking outside
+        document.addEventListener('click', function(event) {
+            const toolsContainer = document.querySelector('.tools-container');
+            const popover = document.getElementById('tools-popover');
+
+            if (!toolsContainer.contains(event.target) && isToolsOpen) {
+                toggleTools();
+            }
+        });
 
         // Check API health on load
         window.onload = async function() {
@@ -204,9 +487,28 @@
             const message = messageInput.value.trim();
             if (!message) return;
 
+            // Add tool context if selected
+            let fullMessage = message;
+            if (selectedTool) {
+                const toolContext = {
+                    'search': 'Effectue une recherche web pour : ',
+                    'image': 'Génère une image de : ',
+                    'code': 'Écris du code pour : ',
+                    'think': 'Réfléchis profondément à : '
+                };
+                fullMessage = toolContext[selectedTool] + message;
+            }
+
             // Add user message
-            addMessage(message, true);
+            addMessage(message + (selectedTool ? ` (${selectedTool})` : ''), true);
             messageInput.value = '';
+
+            // Clear tool selection after use
+            clearTool();
+
+            // Reset textarea height
+            autoResizeTextarea();
+            updateSendButton();
 
             // Show typing indicator
             showTyping();
@@ -218,8 +520,8 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        message: message,
-                        max_tokens: 100,
+                        message: fullMessage,
+                        max_tokens: 150,
                         temperature: 0.7
                     })
                 });
@@ -243,8 +545,9 @@
             }
         }
 
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
                 sendMessage();
             }
         }

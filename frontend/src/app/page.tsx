@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { PromptBox } from "@/components/ui/prompt-box";
+import { ShaderAnimation } from "@/components/ui/shader-animation";
 
 interface Message {
   id: string;
@@ -11,14 +12,7 @@ interface Message {
 }
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "Bonjour ! Je suis une IA basée sur le modèle Gemma de Google. Comment puis-je vous aider aujourd'hui ?",
-      role: "assistant",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +53,7 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Backend API responded with status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -91,91 +85,107 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <div className="border-b bg-white/80 backdrop-blur-sm dark:bg-slate-900/80 dark:border-slate-700">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">G</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">
-                Gemma Chat
-              </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                IA conversationnelle basée sur Google DeepMind
-              </p>
-            </div>
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* Shader Animation Background */}
+      <ShaderAnimation
+        variant="gradient"
+        speed="slow"
+        intensity="subtle"
+        className="fixed inset-0 z-0"
+      />
+
+      {/* Main Content */}
+      <div className="relative z-10 min-h-screen flex flex-col">
+        {/* Header */}
+        <div className="flex-shrink-0 p-6 border-b border-white/10">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-2xl font-light text-center bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text text-transparent">
+              Gemma AI
+            </h1>
+            <p className="text-sm text-center text-gray-400 mt-2">
+              Intelligence artificielle conversationnelle
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* Chat Container */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 dark:border-slate-700/50 min-h-[600px] flex flex-col">
-          {/* Messages */}
-          <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
-                    message.role === "user"
-                      ? "bg-blue-500 text-white ml-12"
-                      : "bg-white dark:bg-slate-700 text-slate-900 dark:text-white mr-12 border border-slate-200 dark:border-slate-600"
-                  }`}
-                >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </p>
-                  <p
-                    className={`text-xs mt-2 ${
-                      message.role === "user"
-                        ? "text-blue-100"
-                        : "text-slate-400 dark:text-slate-500"
+        {/* Chat Container */}
+        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-6 py-8">
+          <div className="flex-1 bg-black/20 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-6 min-h-[500px] max-h-[calc(100vh-300px)] overflow-y-auto">
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <span className="text-2xl">🤖</span>
+                  </div>
+                  <p className="text-gray-400 text-lg">Commencez une conversation avec Gemma</p>
+                  <p className="text-gray-500 text-sm mt-2">Posez une question ou dites bonjour !</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${
+                      message.role === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {message.timestamp.toLocaleTimeString("fr-FR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              </div>
-            ))}
-
-            {/* Loading indicator */}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-white dark:bg-slate-700 rounded-2xl px-4 py-3 shadow-sm mr-12 border border-slate-200 dark:border-slate-600">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                    <div
+                      className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-lg ${
+                        message.role === "user"
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                          : "bg-white/10 backdrop-blur-sm border border-white/20 text-gray-100"
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                      <p
+                        className={`text-xs mt-2 ${
+                          message.role === "user"
+                            ? "text-blue-100"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {message.timestamp.toLocaleTimeString("fr-FR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
                     </div>
-                    <span className="text-sm text-slate-500 dark:text-slate-400">
-                      Gemma réfléchit...
-                    </span>
                   </div>
-                </div>
+                ))}
+
+                {/* Loading indicator */}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3 shadow-lg mr-12">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                        </div>
+                        <span className="text-sm text-gray-300">
+                          Gemma réfléchit...
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
               </div>
             )}
-
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
-          <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 rounded-b-2xl">
+          <div className="flex-shrink-0">
             <PromptBox
               onSendMessage={sendMessage}
               disabled={isLoading}
-              className="max-w-none"
+              className="max-w-none bg-white/5 border-white/20 hover:bg-white/10 transition-colors"
+              placeholder="Posez votre question à Gemma..."
             />
           </div>
         </div>

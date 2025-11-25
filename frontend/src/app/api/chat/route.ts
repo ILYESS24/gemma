@@ -4,7 +4,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Get the backend API URL from environment or default to the FastAPI app
+    // Get the backend API URL from environment or default to localhost
     const backendUrl = process.env.BACKEND_API_URL || 'http://localhost:8000';
 
     // Forward the request to the FastAPI backend

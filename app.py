@@ -7,6 +7,8 @@ import os
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import uvicorn
 
@@ -33,6 +35,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 class ChatRequest(BaseModel):
     message: str
     max_tokens: Optional[int] = 100
@@ -57,28 +62,39 @@ async def startup_event():
 
     try:
         print("Initializing Gemma model...")
-        # Use the smaller 2B model for deployment (faster and uses less memory)
-        model = gm.nn.Gemma3_2B()
-        params = gm.ckpts.load_params(gm.ckpts.CheckpointPath.GEMMA3_2B_IT)
-        print("Gemma model initialized successfully")
-    except Exception as e:
-        print(f"Error initializing Gemma model: {e}")
         print("Available checkpoints:")
         try:
             for checkpoint in gm.ckpts.CheckpointPath:
                 print(f"  - {checkpoint}")
-        except:
-            print("  Could not list available checkpoints")
+        except Exception as e:
+            print(f"  Could not list checkpoints: {e}")
+
+        # Try to load the model - this will likely fail due to missing checkpoints
+        # For now, we'll use mock responses in production
+        print("Note: Model loading is disabled for Render deployment due to resource constraints")
+        print("Using mock responses instead")
+        # Uncomment the lines below if you want to try loading the model:
+        # model = gm.nn.Gemma3_2B()
+        # params = gm.ckpts.load_params(gm.ckpts.CheckpointPath.GEMMA3_2B_IT)
+        # print("Gemma model initialized successfully")
+
+    except Exception as e:
+        print(f"Error initializing Gemma model: {e}")
         print("The API will return mock responses")
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """Root endpoint."""
-    return {
-        "message": "Gemma API is running",
-        "model_loaded": model is not None,
-        "gemma_available": GEMMA_AVAILABLE
-    }
+    """Serve the chat interface."""
+    try:
+        with open("static/index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        # Fallback to JSON response if HTML file not found
+        return {
+            "message": "Gemma API is running",
+            "model_loaded": model is not None,
+            "gemma_available": GEMMA_AVAILABLE
+        }
 
 @app.get("/health")
 async def health():
@@ -99,14 +115,32 @@ async def chat(request: ChatRequest):
         )
 
     if model is None or params is None:
-        # Return a mock response if model failed to load
+        # Return a mock response simulating Gemma's behavior
+        user_message = request.message.lower()
+
+        # Simple rule-based responses to simulate Gemma
+        if "bonjour" in user_message or "salut" in user_message or "hello" in user_message:
+            response_text = "Bonjour ! Je suis une IA basée sur le modèle Gemma de Google. Comment puis-je vous aider aujourd'hui ?"
+        elif "comment" in user_message and "aller" in user_message:
+            response_text = "Je vais très bien, merci de demander ! Je suis opérationnel et prêt à vous aider."
+        elif "qui" in user_message and "tu" in user_message:
+            response_text = "Je suis une API basée sur le modèle Gemma, créée par Google DeepMind. Je suis conçue pour aider les utilisateurs avec diverses tâches."
+        elif "merci" in user_message or "thank" in user_message:
+            response_text = "De rien ! N'hésitez pas si vous avez d'autres questions."
+        elif "python" in user_message or "programmation" in user_message:
+            response_text = "Python est un excellent langage de programmation ! Il est largement utilisé pour le développement web, l'analyse de données, l'IA, et bien plus encore."
+        elif "gemma" in user_message:
+            response_text = "Gemma est une famille de modèles de langage open-source développés par Google DeepMind. Je suis fier d'être basé sur cette technologie !"
+        else:
+            response_text = f"Je comprends que vous dites : '{request.message}'. En tant qu'IA basée sur Gemma, je peux vous aider avec diverses questions. Pouvez-vous être plus spécifique ?"
+
         return ChatResponse(
-            response="Désolé, le modèle n'est pas disponible pour le moment.",
+            response=response_text,
             status="mock_response"
         )
 
     try:
-        # Create sampler
+        # Create sampler (only if model is loaded)
         sampler = gm.text.ChatSampler(
             model=model,
             params=params,
